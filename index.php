@@ -2,12 +2,19 @@
 session_start();
 include 'includes/db.php';
 
+if (!isset($_SESSION['login_attempts'])) {
+    $_SESSION['login_attempts'] = 0;
+}
 //Tables aanmaken
 include 'includes/userTable.php';
 include 'includes/transactionTable.php';
 
 //Controleer of post is geset
 if($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    if ($_SESSION['login_attempts'] >= 5) {
+    $error = "Te veel mislukte inlogpogingen. Probeer het later opnieuw.";
+    } else {
     // Gebruikersnaam en wachtwoord uit post halen
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -28,15 +35,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['loggedin'] = true;
         $_SESSION['username'] = $username;
         $_SESSION['user'] = $user;
+        $_SESSION['login_attempts'] = 0;
 
         header("location: dashboard.php");
     } else {
+        $_SESSION['login_attempts']++;
         // Gebruiker is niet ingelogd
         $error = "Gebruikersnaam of wachtwoord is onjuist";
     }
 
 }
-
+}
 ?>
 
 <!DOCTYPE html>
@@ -67,6 +76,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <input type="submit" value="Inloggen" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline">
         </form>
+        <?php if (isset($error)) { ?>
+           <p class="text-red-500 text-center mt-4">
+        <?php echo $error; ?>
+      </p>
+     <?php } ?>
+     
         <a href="register.php" class="block text-center text-sm text-blue-600 hover:underline mt-4">Nog geen account? Registreer hier</a>
     </div>
 
